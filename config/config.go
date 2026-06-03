@@ -2,9 +2,9 @@ package config
 
 import (
 	"fmt"
-	"os"
-	"strconv"
 	"sync"
+
+	"github.com/clodoaldomarques/core-sdk/pkg/env"
 )
 
 type Config struct {
@@ -32,18 +32,18 @@ var (
 func New(options ...Option) *Config {
 	singleton.Do(func() {
 		instance = &Config{
-			AppPort:            GetInt("APP_PORT", 5000),
-			MySqlDBUser:        GetString("MYSQL_USER", ""),
-			MySqlDBPass:        GetString("MYSQL_PASSWORD", ""),
-			MySqlDBHost:        GetString("MYSQL_HOST", "192.168.49.2"),
-			MySqlDBPort:        GetString("MYSQL_PORT", "30001"),
-			MysqlDBName:        GetString("MYSQL_DATABASE", "balances"),
-			AwsAddress:         GetString("AWS_ADDRESS", ""),
-			AwsRegion:          GetString("AWS_REGION", ""),
-			AwsAccessKeyID:     GetString("AWS_ACCESS_KEY_ID", ""),
-			AwsSecretAccessKey: GetString("AWS_SECRET_ACCESS_KEY", ""),
-			BalancesSNSTopic:   GetString("BALANCES_SNS_TOPIC", ""),
-			BalancesSQSQueue:   GetString("BALANCES_SQS_QUEUE", ""),
+			AppPort:            env.GetInt("APP_PORT", 5000),
+			MySqlDBUser:        env.GetString("MYSQL_USER", ""),
+			MySqlDBPass:        env.GetString("MYSQL_PASSWORD", ""),
+			MySqlDBHost:        env.GetString("MYSQL_HOST", "192.168.49.2"),
+			MySqlDBPort:        env.GetString("MYSQL_PORT", "30001"),
+			MysqlDBName:        env.GetString("MYSQL_DATABASE", "balances"),
+			AwsAddress:         env.GetString("AWS_ADDRESS", ""),
+			AwsRegion:          env.GetString("AWS_REGION", ""),
+			AwsAccessKeyID:     env.GetString("AWS_ACCESS_KEY_ID", ""),
+			AwsSecretAccessKey: env.GetString("AWS_SECRET_ACCESS_KEY", ""),
+			BalancesSNSTopic:   env.GetString("BALANCES_SNS_TOPIC", ""),
+			BalancesSQSQueue:   env.GetString("BALANCES_SQS_QUEUE", ""),
 		}
 	})
 
@@ -130,19 +130,4 @@ func (c Config) GetMySQLConnectionString() string {
 		c.MySqlDBPort,
 		c.MysqlDBName,
 	)
-}
-
-func GetString(env string, def string) string {
-	if e := os.Getenv(env); e != "" {
-		return e
-	}
-	return def
-}
-
-func GetInt(env string, def int) int {
-	i, err := strconv.Atoi(os.Getenv(env))
-	if err != nil {
-		return def
-	}
-	return i
 }

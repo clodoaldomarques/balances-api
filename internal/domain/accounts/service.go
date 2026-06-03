@@ -3,7 +3,12 @@ package accounts
 import (
 	"context"
 
+	"github.com/clodoaldomarques/core-sdk/pkg/tracer"
 	"github.com/shopspring/decimal"
+)
+
+const (
+	api = "balances-api"
 )
 
 type Service struct {
@@ -19,7 +24,9 @@ func NewService(r Repository, p Topic) *Service {
 }
 
 func (s Service) CreateNewAccount(ctx context.Context, a Account) (Account, error) {
+	span, ctx := tracer.NewSpanFromContext(ctx, api, "CreateNewAccount")
 	if err := s.rep.SaveNewAccount(ctx, a); err != nil {
+		span.SetError(err)
 		return Account{}, err
 	}
 
@@ -30,18 +37,22 @@ func (s Service) CreateNewAccount(ctx context.Context, a Account) (Account, erro
 }
 
 func (s Service) UpdateAccountLimits(ctx context.Context, accountID int64, orgID string, limits map[string]decimal.Decimal) (Account, error) {
+	span, ctx := tracer.NewSpanFromContext(ctx, api, "UpdateAccountLimits")
 	acc, err := s.rep.RetrieveAccountByID(ctx, accountID, orgID)
 	if err != nil {
+		span.SetError(err)
 		return Account{}, err
 	}
 
 	for limit, value := range limits {
 		if err = acc.ChangeLimit(limit, value); err != nil {
+			span.SetError(err)
 			return Account{}, err
 		}
 	}
 
 	if err = s.rep.UpdateExistingAccount(ctx, acc); err != nil {
+		span.SetError(err)
 		return Account{}, err
 	}
 
@@ -53,14 +64,17 @@ func (s Service) UpdateAccountLimits(ctx context.Context, accountID int64, orgID
 }
 
 func (s Service) UpdateAccountStatus(ctx context.Context, accountID int64, orgID string, status Status) (Account, error) {
+	span, ctx := tracer.NewSpanFromContext(ctx, api, "UpdateAccountStatus")
 	acc, err := s.rep.RetrieveAccountByID(ctx, accountID, orgID)
 	if err != nil {
+		span.SetError(err)
 		return Account{}, err
 	}
 
 	acc.ChangeStatus(status)
 
 	if err = s.rep.UpdateExistingAccount(ctx, acc); err != nil {
+		span.SetError(err)
 		return Account{}, err
 	}
 
@@ -71,16 +85,20 @@ func (s Service) UpdateAccountStatus(ctx context.Context, accountID int64, orgID
 }
 
 func (s Service) ProcessEntry(ctx context.Context, e Entry) (Account, error) {
+	span, ctx := tracer.NewSpanFromContext(ctx, api, "ProcessEntry")
 	acc, err := s.rep.RetrieveAccountByID(ctx, e.AccountID, e.OrgID)
 	if err != nil {
+		span.SetError(err)
 		return Account{}, err
 	}
 
 	if err = acc.ChangeBalances(e.Impacts); err != nil {
+		span.SetError(err)
 		return Account{}, err
 	}
 
 	if err = s.rep.SaveEntryAndUpdateAccount(ctx, e, acc); err != nil {
+		span.SetError(err)
 		return Account{}, err
 	}
 
