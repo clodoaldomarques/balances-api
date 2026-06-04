@@ -5,10 +5,7 @@ import (
 
 	"github.com/clodoaldomarques/core-sdk/pkg/tracer"
 	"github.com/shopspring/decimal"
-)
-
-const (
-	api = "balances-api"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 type Service struct {
@@ -24,7 +21,9 @@ func NewService(r Repository, p Topic) *Service {
 }
 
 func (s Service) CreateNewAccount(ctx context.Context, a Account) (Account, error) {
-	span, ctx := tracer.NewSpanFromContext(ctx, api, "CreateNewAccount")
+	span, ctx := tracer.NewSpanFromContext(ctx, "Service::CreateNewAccount", attribute.Int64("account_id", a.AccountID))
+	defer span.End()
+
 	if err := s.rep.SaveNewAccount(ctx, a); err != nil {
 		span.SetError(err)
 		return Account{}, err
@@ -37,7 +36,9 @@ func (s Service) CreateNewAccount(ctx context.Context, a Account) (Account, erro
 }
 
 func (s Service) UpdateAccountLimits(ctx context.Context, accountID int64, orgID string, limits map[string]decimal.Decimal) (Account, error) {
-	span, ctx := tracer.NewSpanFromContext(ctx, api, "UpdateAccountLimits")
+	span, ctx := tracer.NewSpanFromContext(ctx, "Service::UpdateAccountLimits", attribute.Int64("account_id", accountID))
+	defer span.End()
+
 	acc, err := s.rep.RetrieveAccountByID(ctx, accountID, orgID)
 	if err != nil {
 		span.SetError(err)
@@ -64,7 +65,9 @@ func (s Service) UpdateAccountLimits(ctx context.Context, accountID int64, orgID
 }
 
 func (s Service) UpdateAccountStatus(ctx context.Context, accountID int64, orgID string, status Status) (Account, error) {
-	span, ctx := tracer.NewSpanFromContext(ctx, api, "UpdateAccountStatus")
+	span, ctx := tracer.NewSpanFromContext(ctx, "Service::UpdateAccountStatus", attribute.Int64("account_id", accountID))
+	defer span.End()
+
 	acc, err := s.rep.RetrieveAccountByID(ctx, accountID, orgID)
 	if err != nil {
 		span.SetError(err)
@@ -85,20 +88,31 @@ func (s Service) UpdateAccountStatus(ctx context.Context, accountID int64, orgID
 }
 
 func (s Service) ProcessEntry(ctx context.Context, e Entry) (Account, error) {
-	span, ctx := tracer.NewSpanFromContext(ctx, api, "ProcessEntry")
+	span, ctx := tracer.NewSpanFromContext(ctx, "Service::ProcessEntry", attribute.Int64("account_id", e.AccountID))
+	defer span.End()
+
 	acc, err := s.rep.RetrieveAccountByID(ctx, e.AccountID, e.OrgID)
 	if err != nil {
 		span.SetError(err)
+		span.AddAttributes(tracer.Attributes{
+			"entry": e,
+		})
 		return Account{}, err
 	}
 
 	if err = acc.ChangeBalances(e.Impacts); err != nil {
 		span.SetError(err)
+		span.AddAttributes(tracer.Attributes{
+			"entry": e,
+		})
 		return Account{}, err
 	}
 
 	if err = s.rep.SaveEntryAndUpdateAccount(ctx, e, acc); err != nil {
 		span.SetError(err)
+		span.AddAttributes(tracer.Attributes{
+			"entry": e,
+		})
 		return Account{}, err
 	}
 

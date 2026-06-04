@@ -94,11 +94,14 @@ spec:
             - name: AWS_REGION
               value: "us-east-1"              
             - name: BALANCES_SNS_TOPIC
-              value: "arn:aws:sns:us-east-1:000000000000:balances-sns-topic"         
+              value: "arn:aws:sns:us-east-1:000000000000:balances-sns-topic"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otel-collector-service:4318"
+            - name: OTEL_SERVICE_NAME
+              value: "balances-api"
           ports:
             - name: balances-app
               containerPort: 5000
-          # Opcional: resources para o container principal
           resources:
             requests:
               memory: "128Mi"
