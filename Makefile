@@ -15,24 +15,20 @@ push:
 
 publish: build push	
 
-kube-apply:
+apply:
 	kubectl apply -f scripts/k8s/
-
-kube-destroy:
-	kubectl delete -f scripts/k8s/ --ignore-not-found
-
-kube-restart: kube-destroy kube-apply
-
-terraform:
 	until nc -z 192.168.49.2 30002; do echo waiting for localstack; sleep 2; done;
 	terraform -chdir=scripts/terraform/ plan
 	terraform -chdir=scripts/terraform/ apply -auto-approve
 
-terraform-init:
-	terraform -chdir=scripts/terraform/ init
+destroy:
+	kubectl delete -f scripts/k8s/ --ignore-not-found
+	terraform -chdir=scripts/terraform/ destroy -auto-approve
 
-terraform-destroy:
-	terraform -chdir=scripts/terraform/ destroy
+restart: destroy apply
+
+terraform:
+	terraform -chdir=scripts/terraform/ init
 
 test:
 	go test ./... -coverprofile cover.out

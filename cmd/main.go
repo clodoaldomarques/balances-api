@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	c := config.New(config.WithAppPort(5000), config.WithMysqlDBName("balances"))
+	c := config.New(config.WithAppPort(5002), config.WithMysqlDBName("balances"))
 	e := server.New()
 	if err := e.Start(fmt.Sprintf(":%d", c.AppPort)); err != http.ErrServerClosed {
 		logger.Fatal(context.Background(), err.Error(), logger.Fields{})
