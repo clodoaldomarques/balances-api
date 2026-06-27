@@ -3,7 +3,7 @@ package accounts
 import (
 	"time"
 
-	"github.com/clodoaldomarques/balances-api/internal/commons"
+	"github.com/clodoaldomarques/core-sdk/pkg/commons"
 	"github.com/shopspring/decimal"
 )
 

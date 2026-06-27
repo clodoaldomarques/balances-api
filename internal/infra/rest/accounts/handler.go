@@ -17,6 +17,7 @@ func CreateNewAccount(c echo.Context) error {
 	defer r.Close()
 
 	t := message.NewTopic(ctx)
+	defer t.Close(ctx)
 
 	s := accounts.NewService(r, t)
 
@@ -46,6 +47,8 @@ func UpdateAccountLimits(c echo.Context) error {
 	defer r.Close()
 
 	t := message.NewTopic(ctx)
+	defer t.Close(ctx)
+
 	s := accounts.NewService(r, t)
 
 	orgID := c.Param("orgID")
@@ -80,6 +83,8 @@ func UpdateAccountStatus(c echo.Context) error {
 	defer r.Close()
 
 	t := message.NewTopic(ctx)
+	defer t.Close(ctx)
+
 	s := accounts.NewService(r, t)
 
 	orgID := c.Param("orgID")
@@ -114,6 +119,8 @@ func ProcessEntry(c echo.Context) error {
 	defer r.Close()
 
 	t := message.NewTopic(ctx)
+	defer t.Close(ctx)
+
 	s := accounts.NewService(r, t)
 
 	e := new(PostEntryRequest)

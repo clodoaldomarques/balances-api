@@ -13,6 +13,9 @@ push:
 	docker push $(repository)/$(api):$(version)
 	docker push $(repository)/$(api):latest
 
+version:
+	docker images | grep $(api)
+
 publish: build push	
 
 apply:

@@ -1,6 +1,9 @@
 package server
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/clodoaldomarques/balances-api/internal/infra/rest/accounts"
 	"github.com/clodoaldomarques/core-sdk/pkg/logger"
 
@@ -14,18 +17,23 @@ type Server struct {
 	http *echo.Echo
 }
 
-func New() *echo.Echo {
-	e := echo.New()
-	routes(e)
-	return e
+func New() *Server {
+	s := &Server{
+		http: echo.New(),
+	}
+	s.routes()
+	return s
 }
 
-func routes(e *echo.Echo) {
+func (s *Server) Start(port int) error {
+	return s.http.Start(fmt.Sprintf(":%d", port))
+}
 
-	e.Validator = &CustomValidator{validator: validator.New()}
+func (s *Server) routes() {
+	s.http.Validator = &CustomValidator{validator: validator.New()}
 
 	// logger interceptor
-	e.Use(logger.InterceptorWithConfig(logger.InterceptorConfig{
+	s.http.Use(logger.InterceptorWithConfig(logger.InterceptorConfig{
 		MaxBodySize:     5 * 1024,
 		LogRequestBody:  true,
 		LogResponseBody: false, // ligue só para debug
@@ -33,13 +41,17 @@ func routes(e *echo.Echo) {
 	}))
 
 	// health check
-	e.GET("/", HealthCheck)
+	s.http.GET("/", HealthCheck)
 
 	// Accounts handler
-	e.POST("/accounts", accounts.CreateNewAccount)
-	e.PUT("/accounts/:orgID/:accountID/limits", accounts.UpdateAccountLimits)
-	e.PUT("/accounts/:orgID/:accountID/status", accounts.UpdateAccountStatus)
-	e.POST("/accounts/entries", accounts.ProcessEntry)
+	s.http.POST("/accounts", accounts.CreateNewAccount)
+	s.http.PUT("/accounts/:orgID/:accountID/limits", accounts.UpdateAccountLimits)
+	s.http.PUT("/accounts/:orgID/:accountID/status", accounts.UpdateAccountStatus)
+	s.http.POST("/accounts/entries", accounts.ProcessEntry)
+}
+
+func (s *Server) Shutdown(ctx context.Context) error {
+	return s.http.Shutdown(ctx)
 }
 
 func HealthCheck(c echo.Context) error {
