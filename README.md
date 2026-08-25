@@ -1,93 +1,462 @@
-# Balances
+# Balances API
 
+> Go-based backend service for balance management, integrating asynchronous messaging, AWS-compatible infrastructure and a cloud-native runtime.
 
+## Overview
 
-## Getting started
+Balances API is a Go backend service responsible for balance-related operations within a distributed financial services architecture.
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+The project was designed to explore the implementation of a cloud-native backend service integrating synchronous APIs with asynchronous messaging and supporting infrastructure.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+The application is designed to run in a Kubernetes environment and uses AWS-compatible services for asynchronous communication.
 
-## Add your files
+The project also includes local infrastructure resources for development using Minikube and LocalStack.
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+## Architecture
 
+The application follows a layered and modular backend structure, separating application initialization, configuration, domain logic and infrastructure concerns.
+
+```text
+                         ┌──────────────────────┐
+                         │     Client / API     │
+                         └──────────┬───────────┘
+                                    │
+                                  HTTP
+                                    │
+                                    ▼
+                         ┌──────────────────────┐
+                         │    Balances API      │
+                         │                      │
+                         │        Go            │
+                         └──────────┬───────────┘
+                                    │
+                     ┌──────────────┼──────────────┐
+                     │              │              │
+                     ▼              ▼              ▼
+                ┌─────────┐   ┌───────────┐   ┌──────────┐
+                │  MySQL  │   │    SNS    │   │   SQS    │
+                │         │   │           │   │          │
+                │Balances │   │  Events   │   │ Messages │
+                └─────────┘   └─────┬─────┘   └────┬─────┘
+                                    │              │
+                                    └──────┬───────┘
+                                           │
+                                           ▼
+                                  Asynchronous Workers
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/clodoaldomarques/balances.git
-git branch -M main
-git push -uf origin main
+
+The application is part of a broader distributed-system environment where synchronous API operations can be combined with asynchronous event processing.
+
+## Main Responsibilities
+
+The service provides the backend foundation for balance-related operations.
+
+Its responsibilities include:
+
+- Balance management
+- Persistence of balance-related data
+- API-based access to balance operations
+- Integration with asynchronous messaging
+- Publication of application events
+- Consumption of asynchronous messages
+- Integration with AWS-compatible services
+- Database migration management
+
+## Event-Driven Architecture
+
+One of the main characteristics of the project is the integration between synchronous HTTP operations and asynchronous messaging.
+
+```text
+                  HTTP Request
+                       │
+                       ▼
+              ┌─────────────────┐
+              │   Balances API  │
+              └────────┬────────┘
+                       │
+                       │
+              ┌────────▼────────┐
+              │    Business     │
+              │     Logic       │
+              └────────┬────────┘
+                       │
+                ┌──────┴───────┐
+                │              │
+                ▼              ▼
+             MySQL            SNS
+                                │
+                                │
+                                ▼
+                               SQS
+                                │
+                                ▼
+                        Async Processing
 ```
 
-## Integrate with your tools
+This architecture decouples producers from consumers and allows asynchronous processing to evolve independently from the API layer.
 
-- [ ] [Set up project integrations](https://gitlab.com/clodoaldomarques/balances/-/settings/integrations)
+## AWS Integration
 
-## Collaborate with your team
+The application integrates with AWS services through the AWS SDK for Go.
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+The messaging architecture uses:
 
-## Test and Deploy
+- Amazon SNS
+- Amazon SQS
 
-Use the built-in continuous integration in GitLab.
+SNS is used for event publication while SQS provides asynchronous message consumption.
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+For local development, these integrations can be executed against LocalStack instead of requiring a real AWS account.
 
-***
+## LocalStack
 
-# Editing this README
+LocalStack provides AWS-compatible services for local development.
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+This allows the application to exercise AWS integrations while running entirely in a local environment.
 
-## Suggestions for a good README
+The local environment can therefore reproduce important parts of the distributed architecture without depending on external cloud resources.
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+```text
+                    Local Environment
+                           │
+                           ▼
+                     ┌───────────┐
+                     │ LocalStack│
+                     └─────┬─────┘
+                           │
+              ┌────────────┼────────────┐
+              │                         │
+              ▼                         ▼
+           Amazon SNS               Amazon SQS
+```
 
-## Name
-Choose a self-explaining name for your project.
+## Database
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+The application uses MySQL for persistence.
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+Database schema evolution is managed through Flyway migrations.
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+This allows database changes to be versioned together with the application and applied in a controlled and reproducible way.
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+## Database Migrations
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+Migration scripts are maintained as versioned SQL files.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+The migration strategy allows:
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+- Schema versioning
+- Reproducible database initialization
+- Incremental schema evolution
+- Separation between application code and database migration execution
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+## Kubernetes
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+The application is designed to run in Kubernetes.
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+The repository includes deployment resources used to run the application and its dependencies in a local Kubernetes environment.
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+The application can therefore be developed using a local environment that closely resembles a cloud-native deployment model.
 
-## License
-For open source projects, say how it is licensed.
+```text
+                    Minikube
+                       │
+        ┌──────────────┼──────────────┐
+        │              │              │
+        ▼              ▼              ▼
+   Balances API     MySQL        LocalStack
+                                      │
+                                 ┌────┴────┐
+                                 │         │
+                                SNS       SQS
+```
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+## Infrastructure as Code
+
+The project uses Terraform to provision messaging infrastructure.
+
+Terraform is responsible for defining AWS-compatible messaging resources used by the application.
+
+This allows infrastructure configuration to be versioned alongside the application and reproduced consistently across environments.
+
+For local development, the Terraform configuration can target LocalStack.
+
+## Project Structure
+
+```text
+balances-api/
+│
+├── cmd/
+│   └── Application entry point
+│
+├── config/
+│   └── Application configuration
+│
+├── docs/
+│   └── Architectural documentation
+│
+├── internal/
+│   └── Application and domain implementation
+│
+├── scripts/
+│   └── Infrastructure and deployment resources
+│
+├── Makefile
+├── go.mod
+├── go.sum
+└── README.md
+```
+
+### `cmd/`
+
+Contains the application entry point and service initialization.
+
+### `config/`
+
+Contains application configuration and environment-related settings.
+
+### `internal/`
+
+Contains the application's internal implementation, keeping implementation details encapsulated within the service.
+
+### `docs/`
+
+Contains architectural documentation and system models.
+
+### `scripts/`
+
+Contains infrastructure and deployment resources used by the project.
+
+## Local Development
+
+### Requirements
+
+- Go
+- Docker
+- Minikube
+- kubectl
+- Terraform
+- Flyway
+
+### Clone
+
+```bash
+git clone https://github.com/clodoaldomarques/balances-api.git
+cd balances-api
+```
+
+### Install dependencies
+
+```bash
+go mod download
+```
+
+### Run tests
+
+```bash
+go test ./...
+```
+
+### Build
+
+```bash
+go build ./...
+```
+
+## Kubernetes Environment
+
+The project can be executed in a local Kubernetes environment using Minikube.
+
+Start Minikube:
+
+```bash
+minikube start
+```
+
+Apply the required Kubernetes resources:
+
+```bash
+kubectl apply -f scripts/k8s/
+```
+
+Verify the deployment:
+
+```bash
+kubectl get pods
+```
+
+Verify the services:
+
+```bash
+kubectl get services
+```
+
+## Messaging
+
+The project uses asynchronous messaging to decouple application components.
+
+The messaging flow is based on the following model:
+
+```text
+                  ┌──────────────┐
+                  │ Balances API │
+                  └──────┬───────┘
+                         │
+                         │ Publish
+                         ▼
+                    ┌─────────┐
+                    │   SNS   │
+                    └────┬────┘
+                         │
+                         │ Subscription
+                         ▼
+                    ┌─────────┐
+                    │   SQS   │
+                    └────┬────┘
+                         │
+                         │ Consume
+                         ▼
+                  ┌──────────────┐
+                  │    Worker    │
+                  └──────────────┘
+```
+
+This pattern provides asynchronous communication between services and reduces direct coupling between producers and consumers.
+
+## Technology Stack
+
+| Technology | Purpose |
+|---|---|
+| Go | Backend service |
+| AWS SDK for Go v2 | AWS integration |
+| Amazon SNS | Event publication |
+| Amazon SQS | Asynchronous messaging |
+| MySQL | Relational persistence |
+| Flyway | Database migrations |
+| Kubernetes | Container orchestration |
+| Minikube | Local Kubernetes environment |
+| Docker | Containerization |
+| LocalStack | Local AWS environment |
+| Terraform | Infrastructure as Code |
+
+## Engineering Concepts
+
+This project demonstrates practical experience with:
+
+- Go backend development
+- REST APIs
+- Microservices architecture
+- Event-driven architecture
+- Asynchronous messaging
+- Amazon SNS
+- Amazon SQS
+- AWS SDK for Go v2
+- Kubernetes
+- Minikube
+- Docker
+- LocalStack
+- Terraform
+- MySQL
+- Database migrations
+- Infrastructure as Code
+- Distributed systems
+
+## Design Decisions
+
+### Why asynchronous messaging?
+
+Balance-related operations can generate events that do not necessarily need to be processed synchronously by the API.
+
+Using SNS and SQS allows these events to be propagated asynchronously and consumed independently.
+
+### Why LocalStack?
+
+LocalStack provides an AWS-compatible environment for local development.
+
+This makes it possible to develop and test AWS integrations without requiring access to a remote AWS environment.
+
+### Why Terraform?
+
+Infrastructure should be reproducible and version controlled just like application code.
+
+Terraform provides a declarative way to define the messaging infrastructure required by the application.
+
+### Why Flyway?
+
+Database schema changes are part of the application's lifecycle.
+
+Flyway provides versioned migrations that allow database evolution to be tracked and reproduced consistently.
+
+## Cloud-Native Development
+
+The project combines application code and infrastructure concerns required by a distributed backend:
+
+```text
+                    Application
+                         │
+                         ▼
+                       Go API
+                         │
+            ┌────────────┼────────────┐
+            │            │            │
+            ▼            ▼            ▼
+          MySQL         SNS          SQS
+                          │            │
+                          └─────┬──────┘
+                                │
+                                ▼
+                         Async Processing
+
+                    Infrastructure Layer
+                         │
+             ┌───────────┼───────────┐
+             ▼           ▼           ▼
+         Kubernetes   Terraform   LocalStack
+```
+
+The result is a local environment capable of reproducing the main infrastructure dependencies of the application.
+
+## Relationship with the Ledger Ecosystem
+
+Balances API can be considered one of the core services in the broader Ledger project ecosystem.
+
+```text
+                         ┌───────────────────┐
+                         │   Ledger Config   │
+                         └───────────────────┘
+                                  │
+                                  │
+                         ┌────────▼─────────┐
+                         │  Balances API    │
+                         │                  │
+                         │  Balance Domain  │
+                         └────────┬─────────┘
+                                  │
+                             Events
+                                  │
+                                  ▼
+                         ┌───────────────────┐
+                         │   Ledger Events   │
+                         └────────┬──────────┘
+                                  │
+                                  ▼
+                         ┌───────────────────┐
+                         │   Ledger Worker   │
+                         └───────────────────┘
+```
+
+The projects can be used together to demonstrate a distributed architecture involving APIs, event publication, asynchronous processing and shared infrastructure.
+
+## Project Status
+
+This project is part of my Go backend engineering portfolio and serves as a practical exploration of distributed systems, event-driven architecture, AWS integrations and cloud-native application development.
+
+The project is intended primarily as an engineering and architecture study rather than a production-ready financial platform.
+
+## Author
+
+**Clodoaldo Marques**
+
+Backend Software Engineer focused on Go, Microservices, Distributed Systems and Cloud-Native architectures.
+
+- GitHub: https://github.com/clodoaldomarques
+- LinkedIn: https://www.linkedin.com/in/clodoaldomarques/
