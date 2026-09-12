@@ -19,10 +19,8 @@ version:
 publish: build push	
 
 apply:
+	${MAKE} terraform
 	kubectl apply -f scripts/k8s/
-	until nc -z 192.168.49.2 30002; do echo waiting for localstack; sleep 2; done;
-	terraform -chdir=scripts/terraform/ plan
-	terraform -chdir=scripts/terraform/ apply -auto-approve
 
 destroy:
 	kubectl delete -f scripts/k8s/ --ignore-not-found
@@ -31,7 +29,12 @@ destroy:
 restart: destroy apply
 
 terraform:
-	terraform -chdir=scripts/terraform/ init
+	@if [ ! -d "scripts/terraform/.terraform" ]; then \
+		terraform -chdir=scripts/terraform/ init;\
+	fi
+	until nc -z 192.168.67.2 30002; do echo waiting for localstack; sleep 2; done;
+	terraform -chdir=scripts/terraform/ plan
+	terraform -chdir=scripts/terraform/ apply -auto-approve
 
 test:
 	go test ./... -coverprofile cover.out
