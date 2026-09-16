@@ -6,8 +6,8 @@ import (
 
 	"github.com/clodoaldomarques/balances-api/config"
 	"github.com/clodoaldomarques/balances-api/internal/domain/accounts"
-	"github.com/clodoaldomarques/core-sdk/pkg/logger"
-	"github.com/clodoaldomarques/core-sdk/pkg/sns"
+	"github.com/clodoaldomarques/core-sdk/pkg/aws/sns"
+	"github.com/clodoaldomarques/core-sdk/pkg/zap/logger"
 	"github.com/google/uuid"
 )
 

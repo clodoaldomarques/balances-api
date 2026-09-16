@@ -11,8 +11,8 @@ import (
 
 	"github.com/clodoaldomarques/balances-api/config"
 	"github.com/clodoaldomarques/balances-api/internal/infra/rest/server"
-	"github.com/clodoaldomarques/core-sdk/pkg/logger"
-	"github.com/clodoaldomarques/core-sdk/pkg/opentelemetry"
+	"github.com/clodoaldomarques/core-sdk/pkg/otel"
+	"github.com/clodoaldomarques/core-sdk/pkg/zap/logger"
 )
 
 func main() {
@@ -25,7 +25,7 @@ func main() {
 		}
 	}()
 
-	opentelemetry.Start(context.Background())
+	otel.Start(context.Background())
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
@@ -41,7 +41,7 @@ func main() {
 		fmt.Println("HTTP server finished with success")
 	}
 
-	if err := opentelemetry.Shutdown(ctx); err != nil {
+	if err := otel.Shutdown(ctx); err != nil {
 		fmt.Printf("error on opentelemetry shutdown: %v\n", err)
 	}
 

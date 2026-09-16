@@ -3,9 +3,8 @@ package accounts
 import (
 	"context"
 
-	"github.com/clodoaldomarques/core-sdk/pkg/tracer"
+	"github.com/clodoaldomarques/core-sdk/pkg/otel/tracer"
 	"github.com/shopspring/decimal"
-	"go.opentelemetry.io/otel/attribute"
 )
 
 type Service struct {
@@ -21,7 +20,7 @@ func NewService(r Repository, p Topic) *Service {
 }
 
 func (s Service) CreateNewAccount(ctx context.Context, a Account) (Account, error) {
-	span, ctx := tracer.NewSpanFromContext(ctx, "Service::CreateNewAccount", attribute.Int64("account_id", a.AccountID))
+	span, ctx := tracer.NewSpanFromContext(ctx, "Service::CreateNewAccount", map[string]any{"account_id": a.AccountID})
 	defer span.End()
 
 	if err := s.rep.SaveNewAccount(ctx, a); err != nil {
@@ -36,7 +35,7 @@ func (s Service) CreateNewAccount(ctx context.Context, a Account) (Account, erro
 }
 
 func (s Service) UpdateAccountLimits(ctx context.Context, accountID int64, orgID string, limits map[string]decimal.Decimal) (Account, error) {
-	span, ctx := tracer.NewSpanFromContext(ctx, "Service::UpdateAccountLimits", attribute.Int64("account_id", accountID))
+	span, ctx := tracer.NewSpanFromContext(ctx, "Service::UpdateAccountLimits", map[string]any{"account_id": accountID})
 	defer span.End()
 
 	acc, err := s.rep.RetrieveAccountByID(ctx, accountID, orgID)
@@ -65,7 +64,7 @@ func (s Service) UpdateAccountLimits(ctx context.Context, accountID int64, orgID
 }
 
 func (s Service) UpdateAccountStatus(ctx context.Context, accountID int64, orgID string, status Status) (Account, error) {
-	span, ctx := tracer.NewSpanFromContext(ctx, "Service::UpdateAccountStatus", attribute.Int64("account_id", accountID))
+	span, ctx := tracer.NewSpanFromContext(ctx, "Service::UpdateAccountStatus", map[string]any{"account_id": accountID})
 	defer span.End()
 
 	acc, err := s.rep.RetrieveAccountByID(ctx, accountID, orgID)
@@ -88,13 +87,13 @@ func (s Service) UpdateAccountStatus(ctx context.Context, accountID int64, orgID
 }
 
 func (s Service) ProcessEntry(ctx context.Context, e Entry) (Account, error) {
-	span, ctx := tracer.NewSpanFromContext(ctx, "Service::ProcessEntry", attribute.Int64("account_id", e.AccountID))
+	span, ctx := tracer.NewSpanFromContext(ctx, "Service::ProcessEntry", map[string]any{"account_id": e.AccountID})
 	defer span.End()
 
 	acc, err := s.rep.RetrieveAccountByID(ctx, e.AccountID, e.OrgID)
 	if err != nil {
 		span.SetError(err)
-		span.AddAttributes(tracer.Attributes{
+		span.AddAttributes(map[string]any{
 			"entry": e,
 		})
 		return Account{}, err
@@ -102,7 +101,7 @@ func (s Service) ProcessEntry(ctx context.Context, e Entry) (Account, error) {
 
 	if err = acc.ChangeBalances(e.Impacts); err != nil {
 		span.SetError(err)
-		span.AddAttributes(tracer.Attributes{
+		span.AddAttributes(map[string]any{
 			"entry": e,
 		})
 		return Account{}, err
@@ -110,7 +109,7 @@ func (s Service) ProcessEntry(ctx context.Context, e Entry) (Account, error) {
 
 	if err = s.rep.SaveEntryAndUpdateAccount(ctx, e, acc); err != nil {
 		span.SetError(err)
-		span.AddAttributes(tracer.Attributes{
+		span.AddAttributes(map[string]any{
 			"entry": e,
 		})
 		return Account{}, err

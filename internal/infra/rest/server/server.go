@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/clodoaldomarques/balances-api/internal/infra/rest/accounts"
-	"github.com/clodoaldomarques/core-sdk/pkg/logger"
+	"github.com/clodoaldomarques/core-sdk/pkg/zap/logger"
 
 	"net/http"
 
