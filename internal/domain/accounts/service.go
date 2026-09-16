@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/clodoaldomarques/core-sdk/pkg/otel/tracer"
+	"github.com/clodoaldomarques/core-sdk/pkg/zap/logger"
 	"github.com/shopspring/decimal"
 )
 
@@ -25,6 +26,7 @@ func (s Service) CreateNewAccount(ctx context.Context, a Account) (Account, erro
 
 	if err := s.rep.SaveNewAccount(ctx, a); err != nil {
 		span.SetError(err)
+		logger.Error(ctx, "error on create new account", logger.Fields{"account": a, "error": err.Error()})
 		return Account{}, err
 	}
 
