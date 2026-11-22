@@ -209,8 +209,3 @@ func parseToEntity(impactsRequest []PostImpactRequest) []accounts.Impact {
 	}
 	return impacts
 }
-
-type ErrorResponse struct {
-	Code  string `json:"code"`
-	Error string `json:"error"`
-}
