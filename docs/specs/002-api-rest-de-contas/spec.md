@@ -10,6 +10,8 @@
 
 **Entrada**: `internal/infra/rest/**`, `cmd/main.go`, `docs/model/01 - C4 - Context.puml`, `docs/model/02 - C4 - Container.puml` e histórico Git (`b0d7f29`, `294b83c`, `c53c5df`, `13c0ff2`, `8fb2ccc`, `dd57b8c`).
 
+> **Nota de migração (spec 005)**: os caminhos `internal/domain/accounts/**` e `internal/infra/**` abaixo são históricos (commit `16ba535`). Após a spec 005, o código equivalente está em `internal/core/accounts/**` e `internal/adapters/**`; as regras e os contratos descritos aqui permanecem os mesmos. Veja o índice em [`README.md`](../README.md) e a convenção em [`../constitution.md`](../constitution.md).
+
 > **Escopo**: documenta o contrato HTTP **atual**, inclusive rotas, códigos de status, códigos de erro e mensagens. Não há collection Postman versionada neste repo; a verificação usa as rotas implementadas e os testes existentes. Nenhuma mudança de comportamento é autorizada — a spec 005 congela este contrato.
 
 ## Contexto e Motivação

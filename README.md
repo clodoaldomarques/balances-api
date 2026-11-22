@@ -47,6 +47,33 @@ The application follows a layered and modular backend structure, separating appl
 
 The application is part of a broader distributed-system environment where synchronous API operations can be combined with asynchronous event processing.
 
+### Hexagonal architecture (spec 005)
+
+The Go code follows a ports-and-adapters layout. The business rules live in `internal/core/accounts/**` and never import infrastructure. Adapters depend on the core through the ports declared in `internal/core/accounts/ports`. `cmd/main.go` is the single composition root.
+
+```text
+cmd/main.go                         composition root
+internal/core/accounts/
+├── domain/                         entities, rules, events and domain errors
+├── application/                    AccountsUseCase implementation (Service)
+└── ports/                          AccountsUseCase, AccountRepository,
+                                    AccountEventPublisher, HealthChecker, mocks
+internal/adapters/
+├── inbound/http/accounts           Echo handlers and DTOs
+├── inbound/http/server             routes, validator, health and shutdown
+├── inbound/http/errors.go          HTTP error mapper
+├── outbound/mysql                  AccountRepository + HealthChecker
+└── outbound/sns                    AccountEventPublisher + HealthChecker
+```
+
+The dependency rule is enforced locally with:
+
+```bash
+make arch-check
+```
+
+See [`docs/specs/constitution.md`](docs/specs/constitution.md) for the rule and [`docs/platform.md`](docs/platform.md) for composition and runtime details.
+
 ## Main Responsibilities
 
 The service provides the backend foundation for balance-related operations.
@@ -195,7 +222,8 @@ balances-api/
 │   └── Architectural documentation
 │
 ├── internal/
-│   └── Application and domain implementation
+│   ├── core/accounts/       # domain, application use case and ports
+│   └── adapters/            # HTTP inbound adapters, MySQL and SNS outbound adapters
 │
 ├── scripts/
 │   └── Infrastructure and deployment resources
@@ -216,7 +244,7 @@ Contains application configuration and environment-related settings.
 
 ### `internal/`
 
-Contains the application's internal implementation, keeping implementation details encapsulated within the service.
+Keeps implementation details encapsulated. `internal/core` holds the domain, the use case and the ports; `internal/adapters` holds the HTTP, MySQL and SNS implementations that depend on those ports.
 
 ### `docs/`
 
@@ -260,6 +288,12 @@ go test ./...
 
 ```bash
 go build ./...
+```
+
+### Architecture check
+
+```bash
+make arch-check
 ```
 
 ## Kubernetes Environment

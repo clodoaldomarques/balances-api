@@ -10,6 +10,8 @@
 
 **Entrada**: `config/config.go`, `internal/infra/database/mysqldb/**`, `internal/infra/message/service.go`, `scripts/**`, `.env` (local, não versionado) e histórico Git (`866dd08`, `8398f3e`, `7245533`, `4c2e592`, `8b5a8cf`, `d8b5ad3`, `eab8468`, `8fb2ccc`, `ab42c68`).
 
+> **Nota de migração (spec 005)**: os caminhos `internal/domain/accounts/**` e `internal/infra/**` abaixo são históricos (commit `16ba535`). Após a spec 005, o código equivalente está em `internal/core/accounts/**` e `internal/adapters/**`; as regras e os contratos descritos aqui permanecem os mesmos. Veja o índice em [`README.md`](../README.md) e a convenção em [`../constitution.md`](../constitution.md).
+
 > **Escopo**: documenta como configuração, MySQL, SNS/SQS e infraestrutura local estão implementados hoje. Fazem parte desta spec o esquema SQL e os contratos de persistência/publicação congelados pela spec 005. Nenhuma mudança de comportamento é autorizada.
 
 ## Contexto e Motivação

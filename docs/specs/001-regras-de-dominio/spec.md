@@ -10,6 +10,8 @@
 
 **Entrada**: `internal/domain/accounts/**`, `account_test.go`, `service_test.go`, `docs/model/03 - C4 - Domain.puml` e histórico Git (commits `f7bbfa9`, `9dc1ade`, `1dc7715`, `16e88c2`, `c32ce93`, `4c2e592`, `ae352f8`).
 
+> **Nota de migração (spec 005)**: os caminhos `internal/domain/accounts/**` e `internal/infra/**` abaixo são históricos (commit `16ba535`). Após a spec 005, o código equivalente está em `internal/core/accounts/**` e `internal/adapters/**`; as regras e os contratos descritos aqui permanecem os mesmos. Veja o índice em [`README.md`](../README.md) e a convenção em [`../constitution.md`](../constitution.md).
+
 > **Escopo**: rastreabilidade. Esta spec documenta o comportamento **já existente**; não autoriza mudança de regra, nome, mensagem de erro ou contrato. Onde o código apresenta desvios ou erros de digitação, eles são registrados como **comportamento atual congelado** — correções devem virar spec própria. Os testes citados são os que hoje estão no repositório.
 
 ## Contexto e Motivação

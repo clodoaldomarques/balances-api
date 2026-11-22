@@ -4,7 +4,11 @@
 
 **Entrada**: [spec.md](spec.md) deste diretório e a estrutura atual deste repo.
 
-**Nota**: este plano descreve trabalho **a executar** neste repo. `[x]` só deve ser usado após a implementação real. Todo o conteúdo necessário está aqui e nos arquivos vizinhos deste diretório.
+**Nota**: plano **executado** neste repo. `[x]` em `tasks.md` indica trabalho concluído no código; a Fase 4 continua diferida. Todo o conteúdo necessário está aqui e nos arquivos vizinhos deste diretório.
+
+## Status da implementação
+
+Fases 0, 1, 2, 3 e 5 concluídas em 2026-11-22. Fase 4 (decorators, divisão de portas e correção de bugs conhecidos) permanece fora do escopo e depende de decisão explícita. Os marcos por fase estão registrados em `tasks.md` e na seção `Implementação` de `spec.md`.
 
 ## Resumo
 
@@ -99,9 +103,9 @@ scripts/check-architecture.sh            # guarda de imports
 
 | Risco / desvio | Por que existe | Decisão |
 |---|---|---|
-| `Service` hoje mora em `domain` | Pacote mistura entidades e caso de uso | Separar em `application` na Fase 1; ajustar imports e testes |
-| `config.New(...)` dentro da goroutine do servidor | Configuração tardia e repetida | Aplicar opções uma vez em `cmd/main.go` |
-| Handlers constroem MySQL + SNS + `Service` por request | Composição espalhada | Injetar portas por construtor na Fase 3 |
+| `Service` morava em `domain` | Pacote misturava entidades e caso de uso | Separado em `application` na Fase 1; imports e testes ajustados |
+| `config.New(...)` dentro da goroutine do servidor | Configuração tardia e repetida | Opções aplicadas uma vez em `cmd/main.go` |
+| Handlers construíam MySQL + SNS + `Service` por request | Composição espalhada | Portas injetadas por construtor na Fase 3 |
 | `Event` é interface de domínio | Contrato de negócio | Permanece no core; não virar DTO de adaptador |
 | `tracer`/`logger` dentro do core | Já presentes | Manter e registrar como desvio |
 | Ausência de specs `001`-`004` e de collection Postman | Repo não tinha esse histórico documentado | Specs `001`-`004` reconstruídas por engenharia reversa em 2026-11-22; verificar contrato com testes e rotas atuais |

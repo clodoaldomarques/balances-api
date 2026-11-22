@@ -10,6 +10,8 @@
 
 **Entrada**: `cmd/main.go`, `internal/domain/accounts/service.go`, `internal/infra/rest/server/server.go`, `internal/infra/database/mysqldb/**`, `internal/infra/message/service.go`, `scripts/k8s/app-deployment.yaml`, `go.mod` e histórico Git (`a63fc2e`, `47fa6fe`, `bb5f9db`, `eab8468`, `ecbf7c2`, `27ea5b2`, `16ba535`).
 
+> **Nota de migração (spec 005)**: os caminhos `internal/domain/accounts/**` e `internal/infra/**` abaixo são históricos (commit `16ba535`). Após a spec 005, o código equivalente está em `internal/core/accounts/**` e `internal/adapters/**`; as regras e os contratos descritos aqui permanecem os mesmos. Veja o índice em [`README.md`](../README.md) e a convenção em [`../constitution.md`](../constitution.md).
+
 > **Escopo**: documenta a instrumentação e o ciclo de vida **atuais**. O contrato do endpoint de health (`GET /`) já está especificado na spec 002; aqui ele é tratado apenas como liveness do processo. Nenhuma mudança de comportamento é autorizada — a spec 005 preserva spans e logs dentro do core.
 
 ## Contexto e Motivação

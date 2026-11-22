@@ -6,7 +6,7 @@
 
 **Repo**: `github.com/clodoaldomarques/balances-api`
 
-**Status**: Proposta — especificação **prescritiva** (estado desejado), ainda não implementada
+**Status**: Implementada — especificação **prescritiva** concluída em 2026-11-22 (Fase 4 permanece diferida)
 
 **Entrada**: engenharia reversa deste repo (`internal/domain/accounts`, `internal/infra/**`, `cmd/main.go`) e convenção da família ledger/balances registrada neste diretório.
 
@@ -57,7 +57,7 @@ Como mantenedor, quero que os handlers HTTP e um futuro consumer chamem o mesmo 
 
 Como operador/mantenedor, quero que `cmd/main.go` construa adapters e casos de uso uma única vez e os injete nos handlers.
 
-**Por que esta prioridade**: cada handler de `accounts` hoje cria MySQL + SNS + `Service` por request; isso espalha composição e impede o controle do ciclo de vida (inclusive o `config.New(config.WithAppPort(5002), ...)` chamado dentro da goroutine).
+**Por que esta prioridade**: antes desta spec, cada handler de `accounts` criava MySQL + SNS + `Service` por request; isso espalhava composição e impedia o controle do ciclo de vida (inclusive o `config.New(config.WithAppPort(5002), ...)` chamado dentro da goroutine).
 
 **Teste independente**: subir o servidor com adapters fake e verificar uma instância de cada porta por processo e fechamento explícito no graceful shutdown.
 
@@ -153,9 +153,20 @@ Como mantenedor, quero que nenhuma porta sem uso ou mock desatualizado sobreviva
 - **SC-006**: `go mod tidy` sem dependências órfãs e sem ocorrências de `gringotts`/`ProgramAPI`/`Griphook`/`ollama` neste repo.
 - **SC-007**: `make arch-check` falha quando um import proibido é introduzido artificialmente e passa no estado final.
 
+## Implementação
+
+Concluída em 2026-11-22 em quatro commits de fase:
+
+- `b04e53a` — guarda arquitetural e `make arch-check`;
+- `40cac39` — movimento físico para `internal/core/**` e `internal/adapters/**`;
+- `80c869b` — portas nomeadas, `HealthChecker`, construtores com dependências injetadas e teste de contrato com fake in-memory;
+- `12f84c1` — raiz de composição, handlers injetados, mapeador HTTP e testes de handler com fake.
+
+Verificação final: `go test ./...`, `go build ./...`, `go vet ./...` e `make arch-check` verdes. A guarda foi validada com um import proibido artificial, que falhou com arquivo e linha.
+
 ## Suposições
 
-- Conexões MySQL e clientes AWS do `core-sdk` são seguros para reutilização concorrente; confirmar na Fase 3.
+- Conexões MySQL e clientes AWS do `core-sdk` são seguros para reutilização concorrente; confirmado na Fase 3 (`database/sql` usa pool concorrente e o cliente AWS SDK v2 é reutilizável).
 - O contrato externo atual é o correto, inclusive desvios já registrados; correções viram specs separadas.
 - Este repo é um módulo Go independente (`go.mod` próprio).
 - Toda a documentação necessária para este repo está neste diretório; não há dependência de links externos.
