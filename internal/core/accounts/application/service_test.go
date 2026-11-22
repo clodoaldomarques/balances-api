@@ -17,13 +17,13 @@ import (
 func TestNewService(t *testing.T) {
 	tests := []struct {
 		name  string
-		setup func(ctrl *gomock.Controller) (ports.Repository, ports.Topic)
+		setup func(ctrl *gomock.Controller) (ports.AccountRepository, ports.AccountEventPublisher)
 		want  func(t *testing.T, s *Service)
 	}{
 		{
 			name: "when create new service with success",
-			setup: func(ctrl *gomock.Controller) (ports.Repository, ports.Topic) {
-				return ports.NewMockRepository(ctrl), ports.NewMockTopic(ctrl)
+			setup: func(ctrl *gomock.Controller) (ports.AccountRepository, ports.AccountEventPublisher) {
+				return ports.NewMockAccountRepository(ctrl), ports.NewMockAccountEventPublisher(ctrl)
 			},
 			want: func(t *testing.T, s *Service) {
 				assert.NotEmpty(t, s)
@@ -51,9 +51,9 @@ func TestService_CreateNewAccount(t *testing.T) {
 		{
 			name: "when create account with sucess",
 			setup: func(ctrl *gomock.Controller) *Service {
-				rep := ports.NewMockRepository(ctrl)
+				rep := ports.NewMockAccountRepository(ctrl)
 				rep.EXPECT().SaveNewAccount(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-				pub := ports.NewMockTopic(ctrl)
+				pub := ports.NewMockAccountEventPublisher(ctrl)
 				pub.EXPECT().Emit(gomock.Any(), gomock.Any()).Times(1)
 				return NewService(rep, pub)
 			},
@@ -67,9 +67,9 @@ func TestService_CreateNewAccount(t *testing.T) {
 		{
 			name: "when repository send an error",
 			setup: func(ctrl *gomock.Controller) *Service {
-				rep := ports.NewMockRepository(ctrl)
+				rep := ports.NewMockAccountRepository(ctrl)
 				rep.EXPECT().SaveNewAccount(gomock.Any(), gomock.Any()).Return(errors.New("repository not found")).Times(1)
-				pub := ports.NewMockTopic(ctrl)
+				pub := ports.NewMockAccountEventPublisher(ctrl)
 				return NewService(rep, pub)
 			},
 			args: func() domain.Account {
@@ -103,12 +103,12 @@ func TestService_UpdateAccountLimits(t *testing.T) {
 		{
 			name: "when update a limit with sucess",
 			setup: func(ctrl *gomock.Controller) *Service {
-				rep := ports.NewMockRepository(ctrl)
+				rep := ports.NewMockAccountRepository(ctrl)
 				acc := buildAccount()
 				rep.EXPECT().RetrieveAccountByID(gomock.Any(), gomock.Eq(int64(230513)), gomock.Eq("TN-12345678")).Return(acc, nil).Times(1)
 				rep.EXPECT().UpdateExistingAccount(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
-				pub := ports.NewMockTopic(ctrl)
+				pub := ports.NewMockAccountEventPublisher(ctrl)
 				pub.EXPECT().Emit(gomock.Any(), gomock.Any()).AnyTimes()
 				return NewService(rep, pub)
 			},
@@ -124,11 +124,11 @@ func TestService_UpdateAccountLimits(t *testing.T) {
 		{
 			name: "when account not found",
 			setup: func(ctrl *gomock.Controller) *Service {
-				rep := ports.NewMockRepository(ctrl)
+				rep := ports.NewMockAccountRepository(ctrl)
 				acc := domain.Account{}
 				rep.EXPECT().RetrieveAccountByID(gomock.Any(), gomock.Eq(int64(230513)), gomock.Eq("TN-12345678")).Return(acc, errors.New("domain.Account not found")).Times(1)
 
-				pub := ports.NewMockTopic(ctrl)
+				pub := ports.NewMockAccountEventPublisher(ctrl)
 				pub.EXPECT().Emit(gomock.Any(), gomock.Any()).AnyTimes()
 				return NewService(rep, pub)
 			},
@@ -145,11 +145,11 @@ func TestService_UpdateAccountLimits(t *testing.T) {
 		{
 			name: "when send invalid limit",
 			setup: func(ctrl *gomock.Controller) *Service {
-				rep := ports.NewMockRepository(ctrl)
+				rep := ports.NewMockAccountRepository(ctrl)
 				acc := buildAccount()
 				rep.EXPECT().RetrieveAccountByID(gomock.Any(), gomock.Eq(int64(230513)), gomock.Eq("TN-12345678")).Return(acc, nil).Times(1)
 
-				pub := ports.NewMockTopic(ctrl)
+				pub := ports.NewMockAccountEventPublisher(ctrl)
 				pub.EXPECT().Emit(gomock.Any(), gomock.Any()).AnyTimes()
 				return NewService(rep, pub)
 			},
@@ -166,12 +166,12 @@ func TestService_UpdateAccountLimits(t *testing.T) {
 		{
 			name: "when send an error on update account",
 			setup: func(ctrl *gomock.Controller) *Service {
-				rep := ports.NewMockRepository(ctrl)
+				rep := ports.NewMockAccountRepository(ctrl)
 				acc := buildAccount()
 				rep.EXPECT().RetrieveAccountByID(gomock.Any(), gomock.Eq(int64(230513)), gomock.Eq("TN-12345678")).Return(acc, nil).Times(1)
 				rep.EXPECT().UpdateExistingAccount(gomock.Any(), gomock.Any()).Return(errors.New("error on update account")).Times(1)
 
-				pub := ports.NewMockTopic(ctrl)
+				pub := ports.NewMockAccountEventPublisher(ctrl)
 				pub.EXPECT().Emit(gomock.Any(), gomock.Any()).AnyTimes()
 				return NewService(rep, pub)
 			},
@@ -208,12 +208,12 @@ func TestService_UpdateAccountStatus(t *testing.T) {
 		{
 			name: "when disable account with sucess",
 			setup: func(ctrl *gomock.Controller) *Service {
-				rep := ports.NewMockRepository(ctrl)
+				rep := ports.NewMockAccountRepository(ctrl)
 				acc := buildAccount()
 				rep.EXPECT().RetrieveAccountByID(gomock.Any(), gomock.Eq(int64(230513)), gomock.Eq("TN-12345678")).Return(acc, nil).Times(1)
 				rep.EXPECT().UpdateExistingAccount(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
-				pub := ports.NewMockTopic(ctrl)
+				pub := ports.NewMockAccountEventPublisher(ctrl)
 				pub.EXPECT().Emit(gomock.Any(), gomock.Any()).Times(1)
 				return NewService(rep, pub)
 			},
@@ -227,10 +227,10 @@ func TestService_UpdateAccountStatus(t *testing.T) {
 		{
 			name: "when account not found",
 			setup: func(ctrl *gomock.Controller) *Service {
-				rep := ports.NewMockRepository(ctrl)
+				rep := ports.NewMockAccountRepository(ctrl)
 				acc := domain.Account{}
 				rep.EXPECT().RetrieveAccountByID(gomock.Any(), gomock.Eq(int64(230513)), gomock.Eq("TN-12345678")).Return(acc, errors.New("account not found")).Times(1)
-				pub := ports.NewMockTopic(ctrl)
+				pub := ports.NewMockAccountEventPublisher(ctrl)
 				return NewService(rep, pub)
 			},
 			args: func() (int64, string, domain.Status) {
@@ -244,11 +244,11 @@ func TestService_UpdateAccountStatus(t *testing.T) {
 		{
 			name: "when account update failed",
 			setup: func(ctrl *gomock.Controller) *Service {
-				rep := ports.NewMockRepository(ctrl)
+				rep := ports.NewMockAccountRepository(ctrl)
 				acc := buildAccount()
 				rep.EXPECT().RetrieveAccountByID(gomock.Any(), gomock.Eq(int64(230513)), gomock.Eq("TN-12345678")).Return(acc, nil).Times(1)
 				rep.EXPECT().UpdateExistingAccount(gomock.Any(), gomock.Any()).Return(errors.New("account update failed")).Times(1)
-				pub := ports.NewMockTopic(ctrl)
+				pub := ports.NewMockAccountEventPublisher(ctrl)
 				return NewService(rep, pub)
 			},
 			args: func() (int64, string, domain.Status) {
@@ -281,11 +281,11 @@ func TestService_ProcessEntry(t *testing.T) {
 		{
 			name: "when process credit entry with sucess",
 			setup: func(ctrl *gomock.Controller) *Service {
-				rep := ports.NewMockRepository(ctrl)
+				rep := ports.NewMockAccountRepository(ctrl)
 				acc := buildAccount()
 				rep.EXPECT().RetrieveAccountByID(gomock.Any(), gomock.Eq(int64(230513)), gomock.Eq("TN-12345678")).Return(acc, nil).Times(1)
 				rep.EXPECT().SaveEntryAndUpdateAccount(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
-				pub := ports.NewMockTopic(ctrl)
+				pub := ports.NewMockAccountEventPublisher(ctrl)
 				pub.EXPECT().Emit(gomock.Any(), gomock.Any()).AnyTimes()
 				return NewService(rep, pub)
 			},
@@ -299,9 +299,9 @@ func TestService_ProcessEntry(t *testing.T) {
 		{
 			name: "when account not found",
 			setup: func(ctrl *gomock.Controller) *Service {
-				rep := ports.NewMockRepository(ctrl)
+				rep := ports.NewMockAccountRepository(ctrl)
 				rep.EXPECT().RetrieveAccountByID(gomock.Any(), gomock.Eq(int64(230513)), gomock.Eq("TN-12345678")).Return(domain.Account{}, errors.New("account not found")).Times(1)
-				pub := ports.NewMockTopic(ctrl)
+				pub := ports.NewMockAccountEventPublisher(ctrl)
 				pub.EXPECT().Emit(gomock.Any(), gomock.Any()).AnyTimes()
 				return NewService(rep, pub)
 			},
@@ -316,11 +316,11 @@ func TestService_ProcessEntry(t *testing.T) {
 		{
 			name: "when error on update account",
 			setup: func(ctrl *gomock.Controller) *Service {
-				rep := ports.NewMockRepository(ctrl)
+				rep := ports.NewMockAccountRepository(ctrl)
 				acc := buildAccount()
 				rep.EXPECT().RetrieveAccountByID(gomock.Any(), gomock.Eq(int64(230513)), gomock.Eq("TN-12345678")).Return(acc, nil).Times(1)
 				rep.EXPECT().SaveEntryAndUpdateAccount(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("illegal operation")).Times(1)
-				pub := ports.NewMockTopic(ctrl)
+				pub := ports.NewMockAccountEventPublisher(ctrl)
 				pub.EXPECT().Emit(gomock.Any(), gomock.Any()).AnyTimes()
 				return NewService(rep, pub)
 			},
@@ -335,10 +335,10 @@ func TestService_ProcessEntry(t *testing.T) {
 		{
 			name: "when error on insuficient balance",
 			setup: func(ctrl *gomock.Controller) *Service {
-				rep := ports.NewMockRepository(ctrl)
+				rep := ports.NewMockAccountRepository(ctrl)
 				acc := buildAccount()
 				rep.EXPECT().RetrieveAccountByID(gomock.Any(), gomock.Eq(int64(230513)), gomock.Eq("TN-12345678")).Return(acc, nil).Times(1)
-				pub := ports.NewMockTopic(ctrl)
+				pub := ports.NewMockAccountEventPublisher(ctrl)
 				pub.EXPECT().Emit(gomock.Any(), gomock.Any()).AnyTimes()
 				return NewService(rep, pub)
 			},

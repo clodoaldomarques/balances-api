@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/clodoaldomarques/balances-api/config"
 	"github.com/clodoaldomarques/balances-api/internal/adapters/outbound/mysql"
 	"github.com/clodoaldomarques/balances-api/internal/adapters/outbound/sns"
 	service "github.com/clodoaldomarques/balances-api/internal/core/accounts/application"
@@ -14,10 +15,11 @@ import (
 
 func CreateNewAccount(c echo.Context) error {
 	ctx := c.Request().Context()
-	r := mysql.NewRepository(ctx)
+	db, _ := mysql.Connect(config.New().GetMySQLConnectionString())
+	r := mysql.NewRepository(ctx, db)
 	defer r.Close()
 
-	t := sns.NewTopic(ctx)
+	t := sns.NewPublisher(ctx, config.New())
 	defer t.Close(ctx)
 
 	s := service.NewService(r, t)
@@ -44,10 +46,11 @@ func CreateNewAccount(c echo.Context) error {
 
 func UpdateAccountLimits(c echo.Context) error {
 	ctx := c.Request().Context()
-	r := mysql.NewRepository(ctx)
+	db, _ := mysql.Connect(config.New().GetMySQLConnectionString())
+	r := mysql.NewRepository(ctx, db)
 	defer r.Close()
 
-	t := sns.NewTopic(ctx)
+	t := sns.NewPublisher(ctx, config.New())
 	defer t.Close(ctx)
 
 	s := service.NewService(r, t)
@@ -80,10 +83,11 @@ func UpdateAccountLimits(c echo.Context) error {
 
 func UpdateAccountStatus(c echo.Context) error {
 	ctx := c.Request().Context()
-	r := mysql.NewRepository(ctx)
+	db, _ := mysql.Connect(config.New().GetMySQLConnectionString())
+	r := mysql.NewRepository(ctx, db)
 	defer r.Close()
 
-	t := sns.NewTopic(ctx)
+	t := sns.NewPublisher(ctx, config.New())
 	defer t.Close(ctx)
 
 	s := service.NewService(r, t)
@@ -116,10 +120,11 @@ func UpdateAccountStatus(c echo.Context) error {
 
 func ProcessEntry(c echo.Context) error {
 	ctx := c.Request().Context()
-	r := mysql.NewRepository(ctx)
+	db, _ := mysql.Connect(config.New().GetMySQLConnectionString())
+	r := mysql.NewRepository(ctx, db)
 	defer r.Close()
 
-	t := sns.NewTopic(ctx)
+	t := sns.NewPublisher(ctx, config.New())
 	defer t.Close(ctx)
 
 	s := service.NewService(r, t)

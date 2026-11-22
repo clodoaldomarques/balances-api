@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	accounts "github.com/clodoaldomarques/balances-api/internal/core/accounts/domain"
+	"github.com/clodoaldomarques/balances-api/internal/core/accounts/ports"
 	"github.com/clodoaldomarques/core-sdk/pkg/zap/logger"
 )
 
@@ -15,23 +16,26 @@ var (
 	INSERT_ENTRIES = `insert into entries (tracking_id, account_id, org_id, impacts, created_at) values (?, ?, ?, ?, ?)`
 )
 
+var (
+	_ ports.AccountRepository = (*Repository)(nil)
+	_ ports.HealthChecker     = (*Repository)(nil)
+)
+
 type Repository struct {
 	ctx context.Context
 	db  *sql.DB
 }
 
-func NewRepository(ctx context.Context) *Repository {
-	db, err := Connect()
-	if err != nil {
-		logger.Error(ctx, "error on connect to database", logger.Fields{"error": err.Error()})
-		return &Repository{ctx: ctx}
-	}
-
+func NewRepository(ctx context.Context, db *sql.DB) *Repository {
 	return &Repository{ctx: ctx, db: db}
 }
 
 func (r Repository) Close() {
 	r.db.Close()
+}
+
+func (r Repository) Check(ctx context.Context) error {
+	return r.db.PingContext(ctx)
 }
 
 func (r Repository) SaveNewAccount(ctx context.Context, a accounts.Account) error {

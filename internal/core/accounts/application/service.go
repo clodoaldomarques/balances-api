@@ -10,12 +10,14 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+var _ ports.AccountsUseCase = (*Service)(nil)
+
 type Service struct {
-	rep ports.Repository
-	pub ports.Topic
+	rep ports.AccountRepository
+	pub ports.AccountEventPublisher
 }
 
-func NewService(r ports.Repository, p ports.Topic) *Service {
+func NewService(r ports.AccountRepository, p ports.AccountEventPublisher) *Service {
 	return &Service{
 		rep: r,
 		pub: p,
