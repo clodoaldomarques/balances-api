@@ -1,10 +1,10 @@
-package mysqldb
+package mysql
 
 import (
 	"encoding/json"
 	"time"
 
-	"github.com/clodoaldomarques/balances-api/internal/domain/accounts"
+	accounts "github.com/clodoaldomarques/balances-api/internal/core/accounts/domain"
 	"github.com/clodoaldomarques/core-sdk/pkg/commons"
 
 	"github.com/shopspring/decimal"

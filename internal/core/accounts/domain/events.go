@@ -1,4 +1,4 @@
-package accounts
+package domain
 
 import (
 	"time"
@@ -6,6 +6,12 @@ import (
 	"github.com/clodoaldomarques/core-sdk/pkg/commons"
 	"github.com/shopspring/decimal"
 )
+
+// Event is the domain contract for messages emitted by the accounts use case.
+type Event interface {
+	EventType() string
+	EventData() any
+}
 
 type Type string
 

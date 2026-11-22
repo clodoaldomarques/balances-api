@@ -1,33 +1,35 @@
-package accounts
+package application
 
 import (
 	"context"
 
+	"github.com/clodoaldomarques/balances-api/internal/core/accounts/domain"
+	"github.com/clodoaldomarques/balances-api/internal/core/accounts/ports"
 	"github.com/clodoaldomarques/core-sdk/pkg/otel/tracer"
 	"github.com/clodoaldomarques/core-sdk/pkg/zap/logger"
 	"github.com/shopspring/decimal"
 )
 
 type Service struct {
-	rep Repository
-	pub Topic
+	rep ports.Repository
+	pub ports.Topic
 }
 
-func NewService(r Repository, p Topic) *Service {
+func NewService(r ports.Repository, p ports.Topic) *Service {
 	return &Service{
 		rep: r,
 		pub: p,
 	}
 }
 
-func (s Service) CreateNewAccount(ctx context.Context, a Account) (Account, error) {
+func (s Service) CreateNewAccount(ctx context.Context, a domain.Account) (domain.Account, error) {
 	span, ctx := tracer.NewSpanFromContext(ctx, "Service::CreateNewAccount", map[string]any{"account_id": a.AccountID})
 	defer span.End()
 
 	if err := s.rep.SaveNewAccount(ctx, a); err != nil {
 		span.SetError(err)
 		logger.Error(ctx, "error on create new account", logger.Fields{"account": a, "error": err.Error()})
-		return Account{}, err
+		return domain.Account{}, err
 	}
 
 	evt := buildCreateAccountEvent(a)
@@ -36,26 +38,26 @@ func (s Service) CreateNewAccount(ctx context.Context, a Account) (Account, erro
 	return a, nil
 }
 
-func (s Service) UpdateAccountLimits(ctx context.Context, accountID int64, orgID string, limits map[string]decimal.Decimal) (Account, error) {
+func (s Service) UpdateAccountLimits(ctx context.Context, accountID int64, orgID string, limits map[string]decimal.Decimal) (domain.Account, error) {
 	span, ctx := tracer.NewSpanFromContext(ctx, "Service::UpdateAccountLimits", map[string]any{"account_id": accountID})
 	defer span.End()
 
 	acc, err := s.rep.RetrieveAccountByID(ctx, accountID, orgID)
 	if err != nil {
 		span.SetError(err)
-		return Account{}, err
+		return domain.Account{}, err
 	}
 
 	for limit, value := range limits {
 		if err = acc.ChangeLimit(limit, value); err != nil {
 			span.SetError(err)
-			return Account{}, err
+			return domain.Account{}, err
 		}
 	}
 
 	if err = s.rep.UpdateExistingAccount(ctx, acc); err != nil {
 		span.SetError(err)
-		return Account{}, err
+		return domain.Account{}, err
 	}
 
 	evt := buildUpdateAccountEvent(acc)
@@ -65,21 +67,21 @@ func (s Service) UpdateAccountLimits(ctx context.Context, accountID int64, orgID
 
 }
 
-func (s Service) UpdateAccountStatus(ctx context.Context, accountID int64, orgID string, status Status) (Account, error) {
+func (s Service) UpdateAccountStatus(ctx context.Context, accountID int64, orgID string, status domain.Status) (domain.Account, error) {
 	span, ctx := tracer.NewSpanFromContext(ctx, "Service::UpdateAccountStatus", map[string]any{"account_id": accountID})
 	defer span.End()
 
 	acc, err := s.rep.RetrieveAccountByID(ctx, accountID, orgID)
 	if err != nil {
 		span.SetError(err)
-		return Account{}, err
+		return domain.Account{}, err
 	}
 
 	acc.ChangeStatus(status)
 
 	if err = s.rep.UpdateExistingAccount(ctx, acc); err != nil {
 		span.SetError(err)
-		return Account{}, err
+		return domain.Account{}, err
 	}
 
 	evt := buildUpdateAccountEvent(acc)
@@ -88,7 +90,7 @@ func (s Service) UpdateAccountStatus(ctx context.Context, accountID int64, orgID
 	return acc, nil
 }
 
-func (s Service) ProcessEntry(ctx context.Context, e Entry) (Account, error) {
+func (s Service) ProcessEntry(ctx context.Context, e domain.Entry) (domain.Account, error) {
 	span, ctx := tracer.NewSpanFromContext(ctx, "Service::ProcessEntry", map[string]any{"account_id": e.AccountID})
 	defer span.End()
 
@@ -98,7 +100,7 @@ func (s Service) ProcessEntry(ctx context.Context, e Entry) (Account, error) {
 		span.AddAttributes(map[string]any{
 			"entry": e,
 		})
-		return Account{}, err
+		return domain.Account{}, err
 	}
 
 	if err = acc.ChangeBalances(e.Impacts); err != nil {
@@ -106,7 +108,7 @@ func (s Service) ProcessEntry(ctx context.Context, e Entry) (Account, error) {
 		span.AddAttributes(map[string]any{
 			"entry": e,
 		})
-		return Account{}, err
+		return domain.Account{}, err
 	}
 
 	if err = s.rep.SaveEntryAndUpdateAccount(ctx, e, acc); err != nil {
@@ -114,7 +116,7 @@ func (s Service) ProcessEntry(ctx context.Context, e Entry) (Account, error) {
 		span.AddAttributes(map[string]any{
 			"entry": e,
 		})
-		return Account{}, err
+		return domain.Account{}, err
 	}
 
 	evt := buildProcessEntryEvent(acc, e)
@@ -123,8 +125,8 @@ func (s Service) ProcessEntry(ctx context.Context, e Entry) (Account, error) {
 	return acc, nil
 }
 
-func buildCreateAccountEvent(a Account) Event {
-	return CreateAccountEvent{
+func buildCreateAccountEvent(a domain.Account) domain.Event {
+	return domain.CreateAccountEvent{
 		AccountID: a.AccountID,
 		OrgID:     a.OrgID,
 		Limits:    a.Limits,
@@ -135,8 +137,8 @@ func buildCreateAccountEvent(a Account) Event {
 	}
 }
 
-func buildUpdateAccountEvent(a Account) Event {
-	return UpdateAccountEvent{
+func buildUpdateAccountEvent(a domain.Account) domain.Event {
+	return domain.UpdateAccountEvent{
 		AccountID: a.AccountID,
 		OrgID:     a.OrgID,
 		Limits:    a.Limits,
@@ -147,8 +149,8 @@ func buildUpdateAccountEvent(a Account) Event {
 	}
 }
 
-func buildProcessEntryEvent(a Account, e Entry) Event {
-	return ProcessEntryEvent{
+func buildProcessEntryEvent(a domain.Account, e domain.Entry) domain.Event {
+	return domain.ProcessEntryEvent{
 		AccountID:  a.AccountID,
 		OrgID:      a.OrgID,
 		TrackingID: e.TrackingID,
@@ -160,10 +162,10 @@ func buildProcessEntryEvent(a Account, e Entry) Event {
 	}
 }
 
-func buildImpactEvents(impacts []Impact) []ImpactEvent {
-	evts := make([]ImpactEvent, 0, len(impacts))
+func buildImpactEvents(impacts []domain.Impact) []domain.ImpactEvent {
+	evts := make([]domain.ImpactEvent, 0, len(impacts))
 	for _, i := range impacts {
-		new := ImpactEvent{
+		new := domain.ImpactEvent{
 			Balance:   i.Balance,
 			Operation: i.Operation,
 			Amount:    i.Amount,

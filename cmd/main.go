@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/clodoaldomarques/balances-api/config"
-	"github.com/clodoaldomarques/balances-api/internal/infra/rest/server"
+	"github.com/clodoaldomarques/balances-api/internal/adapters/inbound/http/server"
 	"github.com/clodoaldomarques/core-sdk/pkg/otel"
 	"github.com/clodoaldomarques/core-sdk/pkg/zap/logger"
 )

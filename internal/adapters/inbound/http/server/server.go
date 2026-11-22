@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/clodoaldomarques/balances-api/internal/infra/rest/accounts"
+	"github.com/clodoaldomarques/balances-api/internal/adapters/inbound/http/accounts"
 	"github.com/clodoaldomarques/core-sdk/pkg/zap/logger"
 
 	"net/http"

@@ -1,11 +1,11 @@
-package message
+package sns
 
 import (
 	"context"
 	"time"
 
 	"github.com/clodoaldomarques/balances-api/config"
-	"github.com/clodoaldomarques/balances-api/internal/domain/accounts"
+	accounts "github.com/clodoaldomarques/balances-api/internal/core/accounts/domain"
 	"github.com/clodoaldomarques/core-sdk/pkg/aws/sns"
 	"github.com/clodoaldomarques/core-sdk/pkg/zap/logger"
 	"github.com/google/uuid"
